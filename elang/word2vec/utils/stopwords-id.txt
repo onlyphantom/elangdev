@@ -1,5 +1,4 @@
 a
-ah
 acara
 ada
 adalah
@@ -8,6 +7,8 @@ adapun
 agak
 agaknya
 agar
+agustus
+ah
 akan
 akankah
 akh
@@ -31,6 +32,7 @@ apabila
 apakah
 apalagi
 apatah
+april
 artinya
 asal
 asalkan
@@ -156,7 +158,9 @@ cukup
 cukupkah
 cukuplah
 cuma
+dah
 dahulu
+dak
 dalam
 dan
 dapat
@@ -170,6 +174,7 @@ demikian
 demikianlah
 dengan
 depan
+desember
 di
 dia
 diakhiri
@@ -270,10 +275,12 @@ emang
 emoh
 empat
 enggak
-engkau
 enggaknya
+engkau
 entah
 entahlah
+februari
+febuari
 gah
 gedung
 gimana
@@ -326,6 +333,7 @@ jalan
 jangan
 jangankan
 janganlah
+januari
 jauh
 jawab
 jawaban
@@ -338,6 +346,7 @@ jenis
 jika
 jikalau
 juga
+juli
 jumat
 jumlah
 jumlahnya
@@ -449,6 +458,7 @@ mana
 manakala
 manalagi
 mantan
+maret
 mari
 masa
 masalah
@@ -463,6 +473,7 @@ maupun
 mba
 mbak
 mbuh
+mei
 melainkan
 melakukan
 melalui
@@ -579,15 +590,18 @@ nama
 namun
 nanti
 nantinya
+ndak
 nggak
 no
-nyo
+november
 nyaris
 nyatanya
+nyo
 of
 ogah
 oh
 ok
+oktober
 oleh
 olehnya
 orang
@@ -756,6 +770,7 @@ seperlunya
 seperti
 sepertinya
 sepihak
+september
 seraya
 sering
 seringnya
@@ -771,9 +786,6 @@ sesuai
 sesuatu
 sesuatunya
 sesudah
-sudah
-udah
-dah
 sesudahnya
 setelah
 setempat
@@ -863,21 +875,20 @@ terutama
 tetap
 tetapi
 the
+tho
 tiap
 tiba
 tiba-tiba
 tidak
-ndak
-dak
 tidakkah
 tidaklah
 tiga
 tinggal
 tinggi
 tingkat
+tirto.id
 to
 toh
-tho
 tolong
 tunjuk
 turut
@@ -885,6 +896,7 @@ tutur
 tuturnya
 ucap
 ucapnya
+udah
 ujar
 ujarnya
 umum
