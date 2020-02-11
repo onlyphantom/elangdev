@@ -23,10 +23,13 @@ def plot2d_demo(model, words=None):
 
     with plt.style.context("seaborn-pastel"):
         plt.figure(figsize=(7, 5), dpi=180)
-        plt.scatter(word_vec[:, 0], word_vec[:, 1], s=5, edgecolors="k", c="c")
+        plt.scatter(word_vec[:, 0], word_vec[:, 1], s=5, alpha=0.3, edgecolors="k", c="c")
 
         for word, (x, y) in zip(words, word_vec):
-            plt.text(x - 0.02, y + 0.02, word, fontsize=5)
+            if word in ['bca', 'mandiri', 'uob']:
+                plt.text(x - 0.02, y + 0.02, word, fontsize=5, weight='bold')
+            else:
+                plt.text(x - 0.02, y + 0.02, word, fontsize=5, alpha=0.5)
 
     plt.show()
 
@@ -35,7 +38,6 @@ if __name__ == "__main__":
     MODEL_PATH = (
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
         + "/word2vec/model/demo2d.model"
-        # + "/word2vec/model/demo500d.model"
     )
     model = Word2Vec.load(MODEL_PATH)
     print("Loaded from Path:", MODEL_PATH, "\n", model)
