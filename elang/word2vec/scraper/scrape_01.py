@@ -3,15 +3,18 @@ import re
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import math
+import pickle
 
 realpath = os.path.dirname(os.path.realpath(__file__))
-folderpath = realpath + "/scrap-results"
+folderpath = realpath + "/scrape-results"
 
-def scrap_tirto(query, category_list = None):
+
+def get_tirtoid_urls(query):
     url_base = "https://tirto.id"
-    url_query = url_base + "/search?q=" + str(query)
+    url_query = url_base + "/search?q=" + query
     req = requests.get(url_query)
-    soup = BeautifulSoup(req.content, "html5lib")
+    soup = BeautifulSoup(req.content, "html.parser")
 
     # get total page number
     try:
@@ -27,7 +30,7 @@ def scrap_tirto(query, category_list = None):
     for page_num in range(1, total_page+1):
         url = url_query + "&p=" + str(page_num)
         r = requests.get(url)
-        s = BeautifulSoup(r.content, "html5lib")
+        s = BeautifulSoup(r.content, "html.parser")
 
         find_article = s.findAll("div", attrs = {"class": "news-list-fade"})
         for row in find_article:
@@ -36,6 +39,14 @@ def scrap_tirto(query, category_list = None):
             article['url'] = url_base + row.a['href']
             articles.append(article)
 
+        if page_num % 100 == 0:
+            print("Page: {} out of {}".format(page_num, total_page))
+
+    # return the dictionary
+    return articles
+
+
+def get_tirtoid_contents(articles, batch_size=None):
     # loop through each stored url
     counter = 0
     for article in articles:
@@ -43,83 +54,223 @@ def scrap_tirto(query, category_list = None):
 
         # access the article url
         req_article = requests.get(article['url'])
-        soup_article = BeautifulSoup(req_article.content, "html5lib")
+        soup_article = BeautifulSoup(req_article.content, "html.parser")
+
+        # preprocessing html
+        for s in soup_article(['script', 'style']):
+            s.decompose()
+        for br in soup_article.find_all("br"):
+            br.replace_with(" ")
 
         # get article category
         find_category = soup_article.findAll("a", attrs = {"itemprop": "item"})
-        if len(find_category):
-            article['category'] = find_category[-1].text
-        else:
-            article['category'] = "Unknown"
-
-        # skip the scrapping if category is not on the list
-        if article['category'] not in category_list:
-            article.clear()
-            continue
-        
-        # get author name and posted date
-        find_author_date = soup_article.find("span", attrs = {"class": "detail-date"})
-
-        match = re.search(":[a-zA-Z\\. ]+-", find_author_date.text)
-        if match is not None:
-            article['author_name'] = match.group(0)[2:-2].title()
-
-        match = re.search("\\d{1,2} [a-zA-Z]+ \\d{4}", find_author_date.text)
-        if match is not None:
-            article['posted_date'] = match.group(0)
+        article['category'] = find_category[-1].text if len(find_category) else ""
 
         # get article content (but exclude the "Baca juga" section)
         find_baca_juga_section = soup_article.find("div", attrs = {"class": "baca-holder"})
-        if find_baca_juga_section is not None:
-            for row in find_baca_juga_section:
+        try:
+            if find_baca_juga_section is not None:
                 row.decompose()
-
+        except:
+            pass
+        
         content = ""
         article_table = soup_article.findAll("div", attrs = {"class": "content-text-editor"})[:-1]
-        for row in article_table:
-            content += re.sub(r'\s+', ' ', row.text) + " "
-        article['content'] = content
+        article['content'] = " ".join([re.sub(r'\s+', ' ', row.text) for row in article_table])
 
-        print(counter, "out of", len(articles))
+        # save content to file, per batch
+        # tsv: category, content, title, url
+        # txt: content and title
+        if batch_size is not None:
+            if counter % batch_size == 0 or counter == len(articles):
+                print("Article: {} out of {}".format(counter, len(articles)))
 
-    # remove empty dictionary from the list
-    articles = list(filter(None, articles))
+                batch_num = (counter-1) // batch_size
+                start_idx = batch_size * batch_num
+                end_idx = min(start_idx + batch_size, len(articles))
 
+                articles_batch = articles[start_idx:end_idx]
+
+                filename = "tirtoid_{}_#{}_{}".format(query, batch_num+1, len(articles_batch))
+
+                save_content2tsv(articles_batch, filename + ".tsv")
+                save_content2txt(articles_batch, filename + ".txt")
+
+    if batch_size is None:
+        filename = "tirtoid_{}_{}".format(query, len(articles))
+        save_content2tsv(articles, filename + ".tsv")
+        save_content2txt(articles, filename + ".txt")
+
+    return articles
+
+
+def get_detikcom_urls(query):
+    url_base = "https://www.detik.com"
+    url_query = url_base + "/search/searchnews?query=" + query
+    req = requests.get(url_query)
+    soup = BeautifulSoup(req.content, "html.parser")
+
+    # get total page number
+    try:
+        find_total_article = soup.find("div", attrs = {"class": "search-result"})
+        total_article_match = re.search("\\d+", find_total_article.span.text)
+        total_article = int(total_article_match.group(0))
+
+        total_page = int(math.ceil(total_article/9))
+        total_page = min(1111, total_page) # detik only provides max. 1111 pages
+    except:
+        print("Article Not Found")
+        return None
+
+    # iterate each page number
+    articles = []
+    for page_num in range(1, total_page+1):
+        url = url_query + "&page=" + str(page_num)
+        r = requests.get(url)
+        s = BeautifulSoup(r.content, "html.parser")
+
+        find_article = s.findAll("article")
+        for row in find_article:
+            article = {}
+
+            # get url
+            article['url'] = row.a['href']
+
+            # get title
+            article['title'] = row.h2.text
+
+            # get category
+            find_category = row.find("span", attrs = {"class": "category"})
+            article['category'] = find_category.text
+            find_category.decompose()
+
+            # get posted date
+            # article['posted_date'] = row.find("span", attrs = {"class": "date"}).text
+
+            articles.append(article)
+            
     # return the dictionary
     return articles
 
-def save_complete_content2tsv(dictionary, filename):
+
+def get_detikcom_contents(articles, batch_size=None):
+    # loop through each stored url
+    counter = 0
+    for article in articles:
+        counter += 1
+
+        # access the article url
+        try:
+            req_article = requests.get(article['url'] + "?single=1")
+        except:
+            continue
+            
+        soup_article = BeautifulSoup(req_article.content, "html.parser")
+
+        # preprocessing html
+        for s in soup_article(['script', 'style']):
+            s.decompose()
+        for br in soup_article.find_all("br"):
+            br.replace_with(" ")
+
+        # get article content
+        content = ""
+        find_div = soup_article.find("div", attrs = {"class": "detail__body-text"})
+        if find_div is None:
+            find_div = soup_article.find("div", attrs = {"class": "itp_bodycontent"})
+        if find_div is None:
+            find_div = soup_article.find("div", attrs = {"class": "detail_text"})
+            
+        if find_div is not None:
+            article_content = find_div.findAll("p")
+            if len(article_content) == 0:
+                article_content = [find_div]
+            article['content'] = " ".join([re.sub(r'\s+', ' ', row.text) for row in article_content])
+        else:
+            article['content'] = ""
+
+
+        # save content to file, per batch
+        # tsv: category, content, title, url
+        # txt: content and title
+        if batch_size is not None:
+            if counter % batch_size == 0 or counter == len(articles):
+                print("Article: {} out of {}".format(counter, len(articles)))
+
+                batch_num = (counter-1) // batch_size
+                start_idx = batch_size * batch_num
+                end_idx = min(start_idx + batch_size, len(articles))
+
+                articles_batch = articles[start_idx:end_idx]
+
+                filename = "detikcom_{}_#{}_{}".format(query, batch_num+1, len(articles_batch))
+
+                save_content2tsv(articles_batch, filename + ".tsv")
+                save_content2txt(articles_batch, filename + ".txt")
+
+    if batch_size is None:
+        filename = "detikcom_{}_{}".format(query, len(articles))
+        save_content2tsv(articles, filename + ".tsv")
+        save_content2txt(articles, filename + ".txt")
+
+    return articles
+
+
+def open_pickle(filename):
+    with open("{}/pkl/{}".format(folderpath, filename), "rb") as f:
+        return pickle.load(f)
+    
+
+def save2pickle(filename, l):
+    with open("{}/pkl/{}".format(folderpath, filename), 'wb') as f:
+        pickle.dump(l, f)
+
+
+def save_content2tsv(dictionary, filename):
     df = pd.DataFrame(dictionary)
-    df.to_csv(folderpath + "/" + filename, sep = "\t", index = False)
+    df.to_csv("{}/tsv/{}".format(folderpath, filename), sep = "\t", index = False)
+
 
 def save_content2txt(dictionary, filename):
-    with open(folderpath + "/" + filename, "w", encoding = "utf-8") as file:
-        for d in dictionary:
-            file.write(d['content'] + "\n")
+    title_content_list = [d['title'] + "\n" + d['content'] for d in dictionary if 'content' in d.keys()]
+    with open("{}/txt/{}".format(folderpath, filename), "w", encoding = "utf-8") as f:
+        f.write("\n".join(title_content_list))
+
 
 def convert_tsv2txt(source_filename, destination_filename):
-    df = pd.read_csv(folderpath + "/" + source_filename, sep = '\t', encoding = "utf-8")
+    df = pd.read_csv("{}/tsv/{}".format(folderpath, source_filename), sep = '\t', encoding = "utf-8")
 
-    with open(folderpath + "/" + destination_filename, "w", encoding = "utf-8") as file:
-        for row in df['content']:
-            file.write(row + "\n")
+    title_content_series = df["title"] + "\n" + df["content"]
+    with open("{}/txt/{}".format(folderpath, destination_filename), "w", encoding = "utf-8") as f:
+        f.write("\n".join([str(row) for row in title_content_series]))
 
-# tirto_category = \
-# ['Bisnis', 'Current Issue', 'Ekonomi', 'Film', 'Foto', 'Foto Arta', 'Foto Raga', 'Gaya Hidup', \
-# 'Hobi', 'Hukum', 'Humaniora', 'Indepth', 'Kesehatan', 'Marketing', 'Musik', 'News', 'Olahraga', \
-# 'Pendidikan', 'Politik', 'Sosial Budaya', 'Teknologi']
+
+def make_new_folders():
+    for filetype in ['tsv', 'txt', 'pkl']:
+        path = folderpath + "/" + filetype
+        if not os.path.exists(path):
+            os.makedirs(path)
+
 
 if __name__ == '__main__':
-    # input
-    query = "bca"
-    category_list = ["Ekonomi"]
+    make_new_folders()
+    query = "tirto"
 
-    # scrap
-    result = scrap_tirto(query, category_list)
+    # TIRTO.ID
+    '''
+    # generate new list of dictionary
+    tirto = get_tirtoid_urls(query)
+    save2pickle("tirtoid_{}.pkl".format(query), tirto)
+    '''
+    tirto = open_pickle("tirtoid_{}.pkl".format(query))
+    tirto_contents = get_tirtoid_contents(tirto)
 
-    # save to file (tsv for complete data, txt for content only)
-    filename = "tirto_" + query + "_" + '_'.join(category_list).lower()
-    save_complete_content2tsv(result, filename + ".tsv")
-    save_content2txt(result, filename + ".txt")
 
-    #convert_tsv2txt("tirto_bank_bisnis_ekonomi.tsv", "tirto_bank_bisnis_ekonomi.txt")
+    # DETIK.COM
+    '''
+    # generate new list of dictionary
+    detik = get_detikcom_urls(query)
+    save2pickle("detikcom_{}.pkl".format(query), detik)
+    '''
+    #detik = open_pickle("detikcom_{}.pkl".format(query))
+    #detik_contents = get_detikcom_contents(detik, batch_size = 2500)
