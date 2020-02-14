@@ -2,7 +2,7 @@ test.py
 elang (pkg)
     plot (pkg)
         utils (pkg)
-            - plot2d()
+            - plot2d(model, words=None, method="PCA")
             - plotsimilar()
             - plotnetwork()
     word2vec (pkg)
