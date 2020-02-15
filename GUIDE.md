@@ -2,11 +2,13 @@ test.py
 elang (pkg)
     plot (pkg)
         utils (pkg)
-            - plot2d(model, words=None, method="PCA")
+            - plot2d(model, words=None, method="PCA", targets=[])
             - plotsimilar()
             - plotnetwork()
     word2vec (pkg)
         utils (pkg)
+            - extract_detikcom()
+            - extract_wikipedia()
             - create_corpus()
             - remove_stopwords()
             - remove_vulgar()
@@ -49,7 +51,8 @@ plot2d(
         "bca",
         "mandiri",
         "uob",
-        "algoritma"
+        "algoritma",
+        "nonsense"
     ],
      targets=['uob', 'mandiri','bca']
 )
