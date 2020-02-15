@@ -38,6 +38,19 @@ To test plotting functions:
 from elang.plot.utils import plot2d
 from gensim.models import Word2Vec
 MODEL_PATH = '../path.to.model'
+# MODEL_PATH = '/Users/samuel/Datasets/corpus/demo50d.model'
 model = Word2Vec.load(MODEL_PATH)
 plot2d(model)
+plot2d(model, method="TSNE")
+plot2d(
+    model,
+    method="PCA",
+    words=[
+        "bca",
+        "mandiri",
+        "uob",
+        "algoritma"
+    ],
+     targets=['uob', 'mandiri','bca']
+)
 ```
