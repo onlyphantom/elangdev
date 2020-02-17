@@ -1,16 +1,40 @@
 import os
 import re
+import math
+import pickle
+import time
+import sys
+
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-import math
-import pickle
+from tqdm import tqdm
 
 realpath = os.path.dirname(os.path.realpath(__file__))
-folderpath = realpath + "/scrape-results"
+folderpath = realpath + "\\scrape-results"
+
+# main scraping function
+def extract_tirtoid(query, batch_size = None, save_urls = True):
+    _make_folders()
+    
+    # list of dictionary: {"title", "url"}
+    tirtoid_urls = _get_tirtoid_urls(query, save_urls)
+
+    # list of dictionary: {"title", "url", "category", "content"}
+    _get_tirtoid_contents(tirtoid_urls, batch_size, query)
+
+def extract_detikcom(query, batch_size = None, save_urls = True):
+    _make_folders()
+    
+    # list of dictionary: {"title", "url"}
+    detikcom_urls = _get_detikcom_urls(query, save_urls)
+
+    # list of dictionary: {"title", "url", "category", "content"}
+    _get_detikcom_contents(detikcom_urls, batch_size, query)
 
 
-def get_tirtoid_urls(query):
+# helper function
+def _get_tirtoid_urls(query, save_urls = True):
     url_base = "https://tirto.id"
     url_query = url_base + "/search?q=" + query
     req = requests.get(url_query)
@@ -22,12 +46,12 @@ def get_tirtoid_urls(query):
         pagination_list = [row.a.text for row in find_pagination]
         total_page = int(pagination_list[-2])
     except:
-        print("Article Not Found")
-        return None
-
+        raise Exception("no article found, try another query")
+    
     # iterate each page number, to get the title and url
     articles = []
-    for page_num in range(1, total_page+1):
+    print("Extracting article URLs from", url_query)
+    for page_num in tqdm(range(1, total_page+1)):
         url = url_query + "&p=" + str(page_num)
         r = requests.get(url)
         s = BeautifulSoup(r.content, "html.parser")
@@ -39,17 +63,22 @@ def get_tirtoid_urls(query):
             article['url'] = url_base + row.a['href']
             articles.append(article)
 
-        if page_num % 100 == 0:
-            print("Page: {} out of {}".format(page_num, total_page))
+    if save_urls:
+        path = "{}\\pkl\\tirtoid_{}.pkl".format(folderpath, query)
+        _save2pickle(path, articles)
+        print("URLs successfully saved to", path)
 
-    # return the dictionary
     return articles
 
 
-def get_tirtoid_contents(articles, batch_size=None):
+def _get_tirtoid_contents(articles, batch_size=None, query=None):
+    if batch_size == None or batch_size <= 0:
+        batch_size = len(articles) 
+
     # loop through each stored url
     counter = 0
-    for article in articles:
+    print("Extracting article contents")
+    for article in tqdm(articles):
         counter += 1
 
         # access the article url
@@ -74,17 +103,14 @@ def get_tirtoid_contents(articles, batch_size=None):
         except:
             pass
         
-        content = ""
         article_table = soup_article.findAll("div", attrs = {"class": "content-text-editor"})[:-1]
         article['content'] = " ".join([re.sub(r'\s+', ' ', row.text) for row in article_table])
 
         # save content to file, per batch
         # tsv: category, content, title, url
         # txt: content and title
-        if batch_size is not None:
+        if 0 < batch_size < len(articles):
             if counter % batch_size == 0 or counter == len(articles):
-                print("Article: {} out of {}".format(counter, len(articles)))
-
                 batch_num = (counter-1) // batch_size
                 start_idx = batch_size * batch_num
                 end_idx = min(start_idx + batch_size, len(articles))
@@ -93,18 +119,20 @@ def get_tirtoid_contents(articles, batch_size=None):
 
                 filename = "tirtoid_{}_#{}_{}".format(query, batch_num+1, len(articles_batch))
 
-                save_content2tsv(articles_batch, filename + ".tsv")
-                save_content2txt(articles_batch, filename + ".txt")
+                _save_content2tsv(articles_batch, filename + ".tsv")
+                _save_content2txt(articles_batch, filename + ".txt")
+                print("\nArticle contents successfully saved to", filename + ".tsv", "and", filename + ".txt")
 
-    if batch_size is None:
+    if batch_size >= len(articles) :
         filename = "tirtoid_{}_{}".format(query, len(articles))
-        save_content2tsv(articles, filename + ".tsv")
-        save_content2txt(articles, filename + ".txt")
+        _save_content2tsv(articles, filename + ".tsv")
+        _save_content2txt(articles, filename + ".txt")
+        print("Article contents successfully saved to", filename + ".tsv", "and", filename + ".txt")
 
     return articles
 
 
-def get_detikcom_urls(query):
+def _get_detikcom_urls(query, save_urls=True):
     url_base = "https://www.detik.com"
     url_query = url_base + "/search/searchnews?query=" + query
     req = requests.get(url_query)
@@ -119,12 +147,12 @@ def get_detikcom_urls(query):
         total_page = int(math.ceil(total_article/9))
         total_page = min(1111, total_page) # detik only provides max. 1111 pages
     except:
-        print("Article Not Found")
-        return None
-
+        raise Exception("no article found, try another query")
+    
     # iterate each page number
     articles = []
-    for page_num in range(1, total_page+1):
+    print("Extracting article URLs from", url_query)
+    for page_num in tqdm(range(1, total_page+1)):
         url = url_query + "&page=" + str(page_num)
         r = requests.get(url)
         s = BeautifulSoup(r.content, "html.parser")
@@ -148,15 +176,23 @@ def get_detikcom_urls(query):
             # article['posted_date'] = row.find("span", attrs = {"class": "date"}).text
 
             articles.append(article)
+
+    if save_urls:
+        path = "{}\\pkl\\detikcom_{}.pkl".format(folderpath, query)
+        _save2pickle(path, articles)
+        print("URLs successfully saved to", path)
             
-    # return the dictionary
     return articles
 
 
-def get_detikcom_contents(articles, batch_size=None):
+def _get_detikcom_contents(articles, batch_size=None, query=None):
+    if batch_size == None or batch_size <= 0:
+        batch_size = len(articles)
+
     # loop through each stored url
     counter = 0
-    for article in articles:
+    print("Extracting article contents")
+    for article in tqdm(articles):
         counter += 1
 
         # access the article url
@@ -174,7 +210,6 @@ def get_detikcom_contents(articles, batch_size=None):
             br.replace_with(" ")
 
         # get article content
-        content = ""
         find_div = soup_article.find("div", attrs = {"class": "detail__body-text"})
         if find_div is None:
             find_div = soup_article.find("div", attrs = {"class": "itp_bodycontent"})
@@ -189,14 +224,11 @@ def get_detikcom_contents(articles, batch_size=None):
         else:
             article['content'] = ""
 
-
         # save content to file, per batch
         # tsv: category, content, title, url
         # txt: content and title
-        if batch_size is not None:
+        if 0 < batch_size < len(articles):
             if counter % batch_size == 0 or counter == len(articles):
-                print("Article: {} out of {}".format(counter, len(articles)))
-
                 batch_num = (counter-1) // batch_size
                 start_idx = batch_size * batch_num
                 end_idx = min(start_idx + batch_size, len(articles))
@@ -205,72 +237,54 @@ def get_detikcom_contents(articles, batch_size=None):
 
                 filename = "detikcom_{}_#{}_{}".format(query, batch_num+1, len(articles_batch))
 
-                save_content2tsv(articles_batch, filename + ".tsv")
-                save_content2txt(articles_batch, filename + ".txt")
+                _save_content2tsv(articles_batch, filename + ".tsv")
+                _save_content2txt(articles_batch, filename + ".txt")
+                print("\nArticle contents successfully saved to", filename + ".tsv", "and", filename + ".txt")
 
-    if batch_size is None:
+    if batch_size >= len(articles):
         filename = "detikcom_{}_{}".format(query, len(articles))
-        save_content2tsv(articles, filename + ".tsv")
-        save_content2txt(articles, filename + ".txt")
+        _save_content2tsv(articles, filename + ".tsv")
+        _save_content2txt(articles, filename + ".txt")
+        print("Article contents successfully saved to", filename + ".tsv", "and", filename + ".txt")
 
     return articles
 
 
-def open_pickle(filename):
-    with open("{}/pkl/{}".format(folderpath, filename), "rb") as f:
+def _open_pickle(filename):
+    with open("{}\\pkl\\{}".format(folderpath, filename), "rb") as f:
         return pickle.load(f)
     
 
-def save2pickle(filename, l):
-    with open("{}/pkl/{}".format(folderpath, filename), 'wb') as f:
+def _save2pickle(path, l):
+    with open(path, 'wb') as f:
         pickle.dump(l, f)
 
 
-def save_content2tsv(dictionary, filename):
+def _save_content2tsv(dictionary, filename):
     df = pd.DataFrame(dictionary)
-    df.to_csv("{}/tsv/{}".format(folderpath, filename), sep = "\t", index = False)
+    df.to_csv("{}\\tsv\\{}".format(folderpath, filename), sep = "\t", index = False)
 
 
-def save_content2txt(dictionary, filename):
+def _save_content2txt(dictionary, filename):
     title_content_list = [d['title'] + "\n" + d['content'] for d in dictionary if 'content' in d.keys()]
-    with open("{}/txt/{}".format(folderpath, filename), "w", encoding = "utf-8") as f:
+    with open("{}\\txt\\{}".format(folderpath, filename), "w", encoding = "utf-8") as f:
         f.write("\n".join(title_content_list))
 
 
-def convert_tsv2txt(source_filename, destination_filename):
-    df = pd.read_csv("{}/tsv/{}".format(folderpath, source_filename), sep = '\t', encoding = "utf-8")
+def _convert_tsv2txt(source_filename, destination_filename):
+    df = pd.read_csv("{}\\tsv\\{}".format(folderpath, source_filename), sep = '\t', encoding = "utf-8")
 
     title_content_series = df["title"] + "\n" + df["content"]
-    with open("{}/txt/{}".format(folderpath, destination_filename), "w", encoding = "utf-8") as f:
+    with open("{}\\txt\\{}".format(folderpath, destination_filename), "w", encoding = "utf-8") as f:
         f.write("\n".join([str(row) for row in title_content_series]))
 
 
-def make_new_folders():
+def _make_folders():
     for filetype in ['tsv', 'txt', 'pkl']:
-        path = folderpath + "/" + filetype
+        path = folderpath + "\\" + filetype
         if not os.path.exists(path):
             os.makedirs(path)
 
 
 if __name__ == '__main__':
-    make_new_folders()
-    query = "tirto"
-
-    # TIRTO.ID
-    '''
-    # generate new list of dictionary
-    tirto = get_tirtoid_urls(query)
-    save2pickle("tirtoid_{}.pkl".format(query), tirto)
-    '''
-    tirto = open_pickle("tirtoid_{}.pkl".format(query))
-    tirto_contents = get_tirtoid_contents(tirto)
-
-
-    # DETIK.COM
-    '''
-    # generate new list of dictionary
-    detik = get_detikcom_urls(query)
-    save2pickle("detikcom_{}.pkl".format(query), detik)
-    '''
-    #detik = open_pickle("detikcom_{}.pkl".format(query))
-    #detik_contents = get_detikcom_contents(detik, batch_size = 2500)
+    extract_tirtoid("bakso")
