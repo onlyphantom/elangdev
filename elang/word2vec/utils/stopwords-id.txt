@@ -7,7 +7,6 @@ adapun
 agak
 agaknya
 agar
-agustus
 ah
 akan
 akankah
@@ -32,7 +31,6 @@ apabila
 apakah
 apalagi
 apatah
-april
 artinya
 asal
 asalkan
@@ -174,7 +172,6 @@ demikian
 demikianlah
 dengan
 depan
-desember
 di
 dia
 diakhiri
@@ -279,8 +276,6 @@ enggaknya
 engkau
 entah
 entahlah
-februari
-febuari
 gah
 gedung
 gimana
@@ -333,7 +328,6 @@ jalan
 jangan
 jangankan
 janganlah
-januari
 jauh
 jawab
 jawaban
@@ -346,7 +340,6 @@ jenis
 jika
 jikalau
 juga
-juli
 jumat
 jumlah
 jumlahnya
@@ -458,7 +451,6 @@ mana
 manakala
 manalagi
 mantan
-maret
 mari
 masa
 masalah
@@ -473,7 +465,6 @@ maupun
 mba
 mbak
 mbuh
-mei
 melainkan
 melakukan
 melalui
@@ -593,7 +584,6 @@ nantinya
 ndak
 nggak
 no
-november
 nyaris
 nyatanya
 nyo
@@ -601,7 +591,6 @@ of
 ogah
 oh
 ok
-oktober
 oleh
 olehnya
 orang
@@ -770,7 +759,6 @@ seperlunya
 seperti
 sepertinya
 sepihak
-september
 seraya
 sering
 seringnya

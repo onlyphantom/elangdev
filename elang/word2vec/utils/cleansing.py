@@ -30,3 +30,8 @@ def remove_vulgarity_id(sentence):
     swears = open_file("swear-words.txt")
     sentence = remove_words(sentence, swears)
     return sentence
+
+def remove_datetime_id(sentence):
+    swears = open_file("datetime.txt")
+    sentence = remove_words(sentence, swears)
+    return sentence
