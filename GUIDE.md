@@ -2,7 +2,7 @@ test.py
 elang (pkg)
     plot (pkg)
         utils (pkg)
-            - plot2d(model, words=None, method="PCA", targets=[])
+            - plot2d(model, words=None, method="PCA", targets=[], **kwargs)
             - plotsimilar()
             - plotnetwork()
     word2vec (pkg)
@@ -10,10 +10,10 @@ elang (pkg)
             - extract_detikcom()
             - extract_wikipedia()
             - create_corpus()
-            - remove_stopwords()
-            - remove_vulgar()
-            - remove_region()
-            - remove_datetime()
+            - remove_stopwords(sentence)
+            - remove_vulgar(sentence)
+            - remove_region(sentence)
+            - remove_datetime(sentence)
             - negative (data)
                 - stopwords-id.gzip
                 - indonesian-region.gzip
@@ -26,10 +26,7 @@ elang (pkg)
             news_general.gzip
 
 import elang
-import elang.plot
-import elang.plot.utils
 from elang.plot.utils import plot2d
-import elang.word2vec
 import elang.word2vec.utils
 
 To demo:
@@ -56,4 +53,8 @@ plot2d(
     ],
      targets=['uob', 'mandiri','bca']
 )
+
+bca = model.wv.most_similar("bca", topn=14)
+similar_bca = [w[0] for w in bca] + ["bca"]
+plot2d(model, method="TSNE",targets=similar_bca, perplexity=400)
 ```
