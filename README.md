@@ -26,12 +26,13 @@ model = Word2Vec.load("path.to.model")
 plot2d(model)
 ```
 Output:
+
 <img width="50%" src="assets/embedding.png">
 
 It even looks like a soaring eagle with its outstretched wings!
 
 ## Scikit-Learn Compatability
-Because the dimensionality reduction procedure is handled by the underlying `sklearn` code, you can use any of the 
+Because the dimensionality reduction procedure is handled by the underlying `sklearn` code, you can use any of the valid [parameters](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html) in the function call and they will be handed off to the underlying method. Common examples are the `perplexity`, `n_iter` and `random_state` parameters:
 
 ```py
 model = Word2Vec.load("path.to.model")
@@ -50,4 +51,4 @@ plot2d(
 
 Output:
 
-<img width="50%" src="assets/tsne.png">
+<img width="50%" src="https://github.com/onlyphantom/elangdev/raw/master/assets/tsne.png">
