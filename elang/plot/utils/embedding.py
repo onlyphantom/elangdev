@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot2d(model, words=None, method="PCA", targets=[]):
+def plot2d(model, words=None, method="PCA", targets=[], *args, **kwargs):
     """plot2d Plot word embeddings in 2-dimension
     
     Create a Matplotlib plot to display word embeddings in 2 dimensions, using a specified dimensionality reduction technique if the word vectors have more than 2 dimensions.
@@ -47,12 +47,14 @@ def plot2d(model, words=None, method="PCA", targets=[]):
             if method == "PCA":
                 from sklearn.decomposition import PCA
 
-                word_vec = PCA(2).fit_transform(word_vec)
+                word_vec = PCA(2, *args, **kwargs).fit_transform(word_vec)
 
             elif method == "TSNE":
                 from sklearn.manifold import TSNE
 
-                word_vec = TSNE(2).fit_transform(word_vec)
+                # TODO: optional kwargs: perplexity (k-neighbors), early_exaggeration etc
+                # Refer to: https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html
+                word_vec = TSNE(2, *args, **kwargs).fit_transform(word_vec)
 
             else:
                 raise AssertionError(
@@ -107,6 +109,18 @@ if __name__ == "__main__":
     #     targets=["uob", "mandiri", "bca"],
     # )
     # plot2d(model)
-    plot2d(model, method="PCA", targets=["karyawan", "algoritma"])
+    # plot2d(model, method="TSNE", targets=["karyawan", "algoritma"], perplexity=400)
     # plot2d(model)
     # plot2d(model, ["bca", "mandiri"])
+    bca = model.wv.most_similar("bca", topn=14)
+    similar_bca = [w[0] for w in bca] + ["bca"]
+    plot2d(
+        model,
+        method="TSNE",
+        targets=similar_bca,
+        perplexity=20,
+        early_exaggeration=50,
+        n_iter=2000,
+        random_state=0,
+    )
+
