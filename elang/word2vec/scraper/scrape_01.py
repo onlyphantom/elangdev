@@ -14,6 +14,64 @@ realpath = os.path.dirname(os.path.realpath(__file__))
 folderpath = realpath + "\\scrape-results"
 
 # main scraping function
+def extract_wikipedia_random(num_articles):
+    _make_folders()
+
+    url_base = "https://id.wikipedia.org/wiki/"
+    random_url = url_base + "Istimewa:Halaman_sembarang"
+
+    if num_articles <= 0:
+        raise ValueError("number of articles must be positive")
+
+    articles = []
+    for page in tqdm(range(num_articles)):
+        url = requests.request("GET", random_url).url
+        query = re.sub(url_base, '', url)
+
+        articles.append(_get_wikipedia_article(query))
+
+    filename = "wikipedia_random_{}".format(num_articles)
+    _save_content2tsv(articles, filename + ".tsv")
+    _save_content2txt(articles, filename + ".txt")
+    print("Article contents successfully saved to", filename + ".tsv", "and", filename + ".txt")
+
+    return articles
+
+
+def extract_wikipedia(query, levels = 5):
+    _make_folders()
+    
+    # scrape article with query
+    try:
+        articles = []
+        article = _get_wikipedia_article(query)
+        articles.append(article)
+        next_related_queries = list(set(article['related_queries']))
+        all_queries = [query]
+    except:
+        raise Exception("no article found, try another query")
+
+    # scrape related queries
+    for level in range(1, levels+1):
+        print("Level {}\n".format(level))
+
+        nextt = []
+        for related_query in tqdm(set(next_related_queries)):
+            if related_query not in set(all_queries) and related_query != "":
+                current_article = _get_wikipedia_article(related_query)
+                articles.append(current_article)
+                all_queries.append(related_query)
+                nextt.extend(current_article['related_queries'])
+        next_related_queries = list(set(nextt))
+
+    filename = "wikipedia_{}_{}".format(query, len(articles))
+    _save_content2tsv(articles, filename + ".tsv")
+    _save_content2txt(articles, filename + ".txt")
+    print("Article contents successfully saved to", filename + ".tsv", "and", filename + ".txt")
+
+    return articles
+
+
 def extract_tirtoid(query, batch_size = None, save_urls = True):
     _make_folders()
     
@@ -21,7 +79,10 @@ def extract_tirtoid(query, batch_size = None, save_urls = True):
     tirtoid_urls = _get_tirtoid_urls(query, save_urls)
 
     # list of dictionary: {"title", "url", "category", "content"}
-    _get_tirtoid_contents(tirtoid_urls, batch_size, query)
+    articles = _get_tirtoid_contents(tirtoid_urls, batch_size, query)
+
+    return articles
+
 
 def extract_detikcom(query, batch_size = None, save_urls = True):
     _make_folders()
@@ -30,10 +91,38 @@ def extract_detikcom(query, batch_size = None, save_urls = True):
     detikcom_urls = _get_detikcom_urls(query, save_urls)
 
     # list of dictionary: {"title", "url", "category", "content"}
-    _get_detikcom_contents(detikcom_urls, batch_size, query)
+    articles = _get_detikcom_contents(detikcom_urls, batch_size, query)
+
+    return articles
 
 
 # helper function
+def _get_wikipedia_article(query):
+    url_base = "https://id.wikipedia.org"
+    url_query = url_base + "/wiki/" + str(query)
+    req = requests.get(url_query)
+    soup = BeautifulSoup(req.content, "html.parser")
+
+    article = {}
+    article['title'] = soup.find("h1", attrs={"class": "firstHeading"}).text
+    article['url'] = url_query
+
+    find_div = soup.find("div", attrs={"class": "mw-parser-output"})
+    if find_div is None:
+        return
+    for s in find_div(['script', 'style', 'table', 'div']):
+        s.decompose()
+
+    find_content = find_div.findAll(["p", "li", "h2.span.mw-headline", "h3.span.mw-headline"])
+
+    article['content'] = ' '.join([re.sub(r'\s+', ' ', row.text) for row in find_content])
+
+    find_redirect_link = find_div.findAll("a", attrs={"class": "mw-redirect"})
+    article['related_queries'] = [link['href'][6:] for link in find_redirect_link]
+
+    return article
+
+
 def _get_tirtoid_urls(query, save_urls = True):
     url_base = "https://tirto.id"
     url_query = url_base + "/search?q=" + query
@@ -284,7 +373,3 @@ def _make_folders():
         path = folderpath + "\\" + filetype
         if not os.path.exists(path):
             os.makedirs(path)
-
-
-if __name__ == '__main__':
-    extract_tirtoid("bakso")
