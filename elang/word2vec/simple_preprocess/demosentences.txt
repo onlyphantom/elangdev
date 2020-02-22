@@ -1,7 +1,7 @@
 Bulan Agustus tercatat rekor pembukaan rekening baru yang tertinggi selama sepuluh dekade.
 Jumlah bank yang menerbitkan kartu ATM sekaligus Kartu Debit tercatat sebanyak 37 bank, termasuk bank mandiri, bank BCA dan bank UOB.
 Selain kartu debit, Bank BCA juga menyediakan Kartu kredit.
-Undian tidak berlaku untuk Karyawan BCA. 
+Undian tidak berlaku untuk karyawan BCA. 
 Bank BCA juga bekerja sama dengan Bank Citibank agar nasabah BCA pemegang kartu kredit Citibank dapat melakukan pembayaran tagihan melalui ATM BCA.
 Untuk pembukaan rekening baru, dibutuhkan kartu tanda penduduk.
 Jasa pembukaan akun baru dibutuhkan oleh karyawan Algoritma.
@@ -13,4 +13,3 @@ Promo hanya berlaku untuk nasabah Citibank atau pemegang kartu kredit Mandiri.
 Profil perusahaan BCA yang memiliki kode emiten BBCA di Bursa Efek Indonesia.
 Dalam keterangan yang ditandatangani Sekretaris Perusahaan BCA, BCA Finance akan membeli sebanyak 2,872 juta saham Bank Royal.
 Manajemen BCA menjelaskan, Bank Royal akan menjadi entitas anak perusahaan yang baru di mana perseroan dan Bank Royal akan mengembangkan bisnis dan fokus di layanan perbankan atau segmen tertentu.
-Cara-cara di mana Airbnb merespons dan beradaptasi dengan proses-proses manajemen algoritma yang diterapkan oleh Airbnb

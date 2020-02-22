@@ -6,7 +6,7 @@ from utils import remove_stopwords_id
 REAL_PATH = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR = REAL_PATH + "/simple_preprocess/sentences.txt"
 MODEL_DIR = REAL_PATH + "/model/fin.model"
-SIZE = 100
+SIZE = 50
 WINDOW = 5
 ITER = 10
 
@@ -18,7 +18,8 @@ def create_corpus():
     corpus = list(map(simple_preprocess, sentences))
     print(corpus[:2], "\nSentences: -->", len(corpus))
     uniqset = set(word for l in corpus for word in l)
-    print(len(uniqset), "Unique Terms")
+    print("Unique Terms -->", len(uniqset))
+    print(uniqset)
     return corpus
 
 

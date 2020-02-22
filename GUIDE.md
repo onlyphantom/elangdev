@@ -3,7 +3,7 @@ elang (pkg)
     plot (pkg)
         utils (pkg)
             - plot2d(model, words=None, method="PCA", targets=[], **kwargs)
-            - plotsimilar()
+            - plotCluster()
             - plotnetwork()
     word2vec (pkg)
         utils (pkg)
@@ -56,5 +56,13 @@ plot2d(
 
 bca = model.wv.most_similar("bca", topn=14)
 similar_bca = [w[0] for w in bca] + ["bca"]
-plot2d(model, method="TSNE",targets=similar_bca, perplexity=400)
+plot2d(
+    model,
+    method="TSNE",
+    targets=similar_bca,
+    perplexity=20,
+    early_exaggeration=50,
+    n_iter=2000,
+    random_state=0,
+)
 ```
