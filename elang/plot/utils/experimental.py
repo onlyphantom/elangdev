@@ -30,8 +30,6 @@ def plotCluster(model, words, method="TSNE", n=10, draggable=False, *args, **kwa
 
     elif method == "TSNE":
         from sklearn.manifold import TSNE
-        # TODO: optional kwargs: perplexity (k-neighbors), early_exaggeration etc
-        # Refer to: https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html
         word_vec = TSNE(2, *args, **kwargs).fit_transform(embedding_clusters)
 
     else:
@@ -41,49 +39,31 @@ def plotCluster(model, words, method="TSNE", n=10, draggable=False, *args, **kwa
 
     word_vec = word_vec.reshape(cent_n, neigh_n, -1)
     print("WordVec Shape:", word_vec.shape) # (7,10,2)
-    legendpatches = []
+    # legendpatches = []
     with plt.style.context("seaborn-pastel"):
-        plt.rc('legend', fontsize=7, fancybox=True, framealpha=0.2, facecolor="#777777", edgecolor="#000000")
+        plt.rc('legend', fontsize=7, fancybox=True, framealpha=0.8, facecolor="#777777", edgecolor="#000000")
         plt.rc('font', size=7)
         plt.figure(figsize=(7, 5), dpi=180)
         cmx = cm.get_cmap('Pastel1')
         colors = cmx(np.linspace(0,1,len(words))) # (7,4)
-        print("Word Clusters", np.array(word_clusters).shape, word_clusters)
         for word, embedding, neighbor, color in zip(words, word_vec, word_clusters, colors):
-            x = word_vec[:,:,0]
-            y = word_vec[:,:,1]
-            print("x", x, '\n')
-            print(x.shape) # 7,10
-            # plt.scatter(x, y, c=colors.repeat(10, axis=0), alpha=1, label=word)
-            plt.scatter(x, y, c=colors.repeat(10, axis=0), alpha=1)
+            x = embedding[:,0]
+            y = embedding[:,1]
+            plt.scatter(x, y, color=color, alpha=1, label=word)
 
-            patchx = mpatches.Patch(color=color, label=word)
-            legendpatches.append(patchx)
-            # TODO: Add words for neighbors
+            # patchx = mpatches.Patch(color=color, label=word)
+            # legendpatches.append(patchx)
             for i, word in enumerate(neighbor):
-                print(i, word)
+                plt.annotate(word, alpha=0.6, xy=(x[i], y[i]), size=5)
 
         if draggable:
-            leg = plt.legend(handles=legendpatches)
+            # leg = plt.legend(handles=legendpatches)
+            leg = plt.legend()
             leg.set_draggable(state=True, use_blit=True, update='bbox')
         else:
-            plt.legend(handles=legendpatches, loc="lower left", ncol=min(5, len(words)))
-
-        # print("x1", x[0])
-        # print("word_vec[3,:,:]", word_vec[3,:,:])
-        # print("word_vec[3,:,0]", word_vec[3,:,0])
-        # print(word_clusters)
-        # for i, clust in enumerate(word_clusters):
-        #     plt.scatter(x, y, c=colors.repeat(10, axis=0), alpha=0.7, label=word_clusters[0])
-        #     print("i",i)
-        #     print("clust", clust)
-        #     for j, c in enumerate(clust):
-        #         print("j, c", j, c)
-        #         plt.text(word_vec[i,j,0], word_vec[i, j, 1], c, fontsize=4.5, alpha=0.5)
-        # plt.legend(loc=4)
-        # for label, embeddings, words, color in zip(words, word_vec, word_clusters, colors):
-        #     print(color)
-        #     plt.scatter(embeddings[:,0], embeddings[:,1], c=color, alpha=0.5, label=label)
+            leg = plt.legend(loc="lower left", ncol=min(5, len(words)))
+            plt.setp(leg.get_texts(), color='w')
+            
 
     plt.show()
 
