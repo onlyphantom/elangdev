@@ -10,17 +10,20 @@ def plot2d(model, words=None, method="PCA", targets=[], *args, **kwargs):
     """plot2d Plot word embeddings in 2-dimension
     
     Create a Matplotlib plot to display word embeddings in 2 dimensions, using a specified dimensionality reduction technique if the word vectors have more than 2 dimensions.
-    Optionally accepts a `list` for the `words` parameter, to display only a subset of words from the `model`'s dictionary. 
+    Optionally accepts a `list` for the `words` parameter, to display only a subset of words from the `model`'s dictionary. When `None`, it will use the first 500 words of the model.  
     Optionally accepts a `list` for the `targets` parameter, to emphasize in bold fontface a subset of words
     
+    Any other parameters specified using the `*args` or `**kwargs` is unpacked and passed on to the underlying dimensionality reduction method in `sklearn`.
+
     :param model: An instance of Word2Vec
     :type model: Word2Vec
     :param words: List of words to render in plot -- when None all words in the `model` are plotted, defaults to None
-    :type words: list or `None`, optional
+    :type words: list or None, optional
     :param method: Method for dimensionality reduction, defaults to "PCA"
     :type method: str, optional
     :param targets: List of words to be emphasized using a bold font in the plot, defaults to []
     :type targets: list, optional
+    :return: A matplotlib figure
     :raises AssertionError: Ensure `model` is size 2 (2-dimension word vectors) (2-dimension word vectors) or higher
     """
     assert (
@@ -34,7 +37,7 @@ def plot2d(model, words=None, method="PCA", targets=[], *args, **kwargs):
             raise TypeError("The targets parameter expect a python list")
 
     if words is None:
-        words = [word for word in model.wv.vocab]
+        words = [word for word in list(model.wv.vocab)[1:500]]
     else:
         try:
             words = [word for word in words if word in model.wv.vocab]
@@ -46,14 +49,10 @@ def plot2d(model, words=None, method="PCA", targets=[], *args, **kwargs):
         if model.vector_size > 2:
             if method == "PCA":
                 from sklearn.decomposition import PCA
-
                 word_vec = PCA(2, *args, **kwargs).fit_transform(word_vec)
 
             elif method == "TSNE":
                 from sklearn.manifold import TSNE
-
-                # TODO: optional kwargs: perplexity (k-neighbors), early_exaggeration etc
-                # Refer to: https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html
                 word_vec = TSNE(2, *args, **kwargs).fit_transform(word_vec)
 
             else:
@@ -85,7 +84,8 @@ if __name__ == "__main__":
         + "/word2vec/model/demo2d.model"
         # + "/word2vec/model/fin.model"
     )
-    model = Word2Vec.load(MODEL_PATH)
+    # model = Word2Vec.load(MODEL_PATH)
+    model = Word2Vec.load("/Users/samuel/Downloads/scrape5w500d/scrape5w500d.model") 
     print("Loaded from Path:", MODEL_PATH, "\n", model)
 
     # plot2d(

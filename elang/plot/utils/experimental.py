@@ -5,9 +5,24 @@ from gensim.models import Word2Vec
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import matplotlib.patches as mpatches
 
-def plotCluster(model, words, method="TSNE", n=10, draggable=False, *args, **kwargs):
+def plotNeighbours(model, words,  n=10, method="TSNE", draggable=False, *args, **kwargs):
+    """plotCluster Plot and color the `n` nearest neighbors for each word in 2-dimension 
+
+    
+
+    :param model: An instance of Word2Vec
+    :type model: Word2Vec
+    :param words: [description]
+    :type words: [type]
+    :param method: [description], defaults to "TSNE"
+    :type method: str, optional
+    :param n: [description], defaults to 10
+    :type n: int, optional
+    :param draggable: [description], defaults to False
+    :type draggable: bool, optional
+    :raises AssertionError: [description]
+    """
     embedding_clusters = []
     word_clusters = [] # (7,10)
     for word in words:
@@ -59,7 +74,7 @@ def plotCluster(model, words, method="TSNE", n=10, draggable=False, *args, **kwa
         if draggable:
             # leg = plt.legend(handles=legendpatches)
             leg = plt.legend()
-            leg.set_draggable(state=True, use_blit=True, update='bbox')
+            leg.set_draggable(state=True)
         else:
             leg = plt.legend(loc="lower left", ncol=min(5, len(words)))
             plt.setp(leg.get_texts(), color='w')
@@ -74,13 +89,15 @@ if __name__ == "__main__":
         + "/word2vec/model/fin.model"
         #  + "/word2vec/model/demo2d.model"
     )
-    model = Word2Vec.load(MODEL_PATH)
+    # model = Word2Vec.load(MODEL_PATH)
+    model = Word2Vec.load("/Users/samuel/Downloads/scrape5w500d/scrape5w500d.model")   
     print("Loaded from Path:", MODEL_PATH, "\n", model)
     
-    words = ['bca', 'federal', 'dunia', 'dokumen', 'karyawan', 'pejabat', "hukum"]
+    words = ['bca', 'hitam', 'hutan', 'pisang', 'mobil', "pulau", "pejabat", "android", "kompas"]
     
-    plotCluster(model, 
+    plotNeighbours(model, 
         words, 
         method="TSNE", 
-        n=10,
-        perplexity=50, early_exaggeration=50, n_iter=2000, random_state=0)
+        n=15,
+        draggable=True,
+        perplexity=12, early_exaggeration=50, n_iter=2000, random_state=0)
