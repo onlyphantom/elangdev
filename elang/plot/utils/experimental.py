@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.patches as mpatches
 
-def plotCluster(model, words, method="TSNE", n=10, *args, **kwargs):
+def plotCluster(model, words, method="TSNE", n=10, draggable=False, *args, **kwargs):
     embedding_clusters = []
     word_clusters = [] # (7,10)
     for word in words:
@@ -43,6 +43,8 @@ def plotCluster(model, words, method="TSNE", n=10, *args, **kwargs):
     print("WordVec Shape:", word_vec.shape) # (7,10,2)
     legendpatches = []
     with plt.style.context("seaborn-pastel"):
+        plt.rc('legend', fontsize=7, fancybox=True, framealpha=0.2, facecolor="#777777", edgecolor="#000000")
+        plt.rc('font', size=7)
         plt.figure(figsize=(7, 5), dpi=180)
         cmx = cm.get_cmap('Pastel1')
         colors = cmx(np.linspace(0,1,len(words))) # (7,4)
@@ -61,8 +63,12 @@ def plotCluster(model, words, method="TSNE", n=10, *args, **kwargs):
             for i, word in enumerate(neighbor):
                 print(i, word)
 
-        
-        plt.legend(handles=legendpatches)
+        if draggable:
+            leg = plt.legend(handles=legendpatches)
+            leg.set_draggable(state=True, use_blit=True, update='bbox')
+        else:
+            plt.legend(handles=legendpatches, loc="lower left", ncol=min(5, len(words)))
+
         # print("x1", x[0])
         # print("word_vec[3,:,:]", word_vec[3,:,:])
         # print("word_vec[3,:,0]", word_vec[3,:,0])
@@ -93,4 +99,8 @@ if __name__ == "__main__":
     
     words = ['bca', 'federal', 'dunia', 'dokumen', 'karyawan', 'pejabat', "hukum"]
     
-    plotCluster(model, words, method="TSNE", n=10, perplexity=50, early_exaggeration=50, n_iter=2000, random_state=0)
+    plotCluster(model, 
+        words, 
+        method="TSNE", 
+        n=10,
+        perplexity=50, early_exaggeration=50, n_iter=2000, random_state=0)

@@ -81,8 +81,9 @@ def plot2d(model, words=None, method="PCA", targets=[], *args, **kwargs):
 if __name__ == "__main__":
     MODEL_PATH = (
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-        + "/word2vec/model/demo50d.model"
-        #  + "/word2vec/model/demo2d.model"
+        # + "/word2vec/model/demo50d.model"
+        + "/word2vec/model/demo2d.model"
+        # + "/word2vec/model/fin.model"
     )
     model = Word2Vec.load(MODEL_PATH)
     print("Loaded from Path:", MODEL_PATH, "\n", model)
@@ -118,9 +119,8 @@ if __name__ == "__main__":
         model,
         method="TSNE",
         targets=similar_bca,
-        perplexity=20,
+        perplexity=30,
         early_exaggeration=50,
         n_iter=2000,
         random_state=0,
     )
-
