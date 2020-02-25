@@ -5,6 +5,7 @@ from gensim.models import Word2Vec
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib.patches as mpatches
 
 def plotCluster(model, words, method="TSNE", n=10, *args, **kwargs):
     embedding_clusters = []
@@ -40,7 +41,7 @@ def plotCluster(model, words, method="TSNE", n=10, *args, **kwargs):
 
     word_vec = word_vec.reshape(cent_n, neigh_n, -1)
     print("WordVec Shape:", word_vec.shape) # (7,10,2)
-
+    legendpatches = []
     with plt.style.context("seaborn-pastel"):
         plt.figure(figsize=(7, 5), dpi=180)
         cmx = cm.get_cmap('Pastel1')
@@ -51,13 +52,17 @@ def plotCluster(model, words, method="TSNE", n=10, *args, **kwargs):
             y = word_vec[:,:,1]
             print("x", x, '\n')
             print(x.shape) # 7,10
-            plt.scatter(x, y, c=colors.repeat(10, axis=0), alpha=1, label=word)
+            # plt.scatter(x, y, c=colors.repeat(10, axis=0), alpha=1, label=word)
+            plt.scatter(x, y, c=colors.repeat(10, axis=0), alpha=1)
+
+            patchx = mpatches.Patch(color=color, label=word)
+            legendpatches.append(patchx)
             # TODO: Add words for neighbors
             for i, word in enumerate(neighbor):
                 print(i, word)
 
         
-        plt.legend(loc=4)
+        plt.legend(handles=legendpatches)
         # print("x1", x[0])
         # print("word_vec[3,:,:]", word_vec[3,:,:])
         # print("word_vec[3,:,0]", word_vec[3,:,0])
