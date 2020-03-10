@@ -1,19 +1,19 @@
 # Word Embedding utilities: Indonesian Language Models
 [![PyPI version](https://img.shields.io/pypi/v/elang?color=green)](https://badge.fury.io/py/elang) [![PyPI license](https://img.shields.io/pypi/l/Elang?color=red)](https://pypi.python.org/pypi/elang/) [![Activity](https://img.shields.io/github/commit-activity/m/onlyphantom/elangdev)](https://github.com/onlyphantom/elangdev) [![maintained](https://img.shields.io/maintenance/yes/2020)](https://github.com/onlyphantom/elang/graphs/commit-activity) [![PyPI format](https://img.shields.io/pypi/format/elang)](https://pypi.org/project/elang/https://pypi.org/project/elang/) [![pypi downloads](https://img.shields.io/pypi/dm/elang)](https://pypi.org/project/elang/https://pypi.org/project/elang/)
 
-Elang is an acronym that combines the phrases **Embedding (E)** and **Language (Lang) Models**. Its goal is to help NLP (natural language processing) researchers, Word2Vec practitioners and data scientists be more productive in training language models. By the 0.1 release [current version, 0.0.7](https://pypi.org/project/elang/https://pypi.org/project/elang/), the package will include:
+Elang is an acronym that combines the phrases **Embedding (E)** and **Language (Lang) Models**. Its goal is to help NLP (natural language processing) researchers, Word2Vec practitioners and data scientists be more productive in training language models. By the 0.1 release (https://pypi.org/project/elang/https://pypi.org/project/elang/)), the package will include ("marked" checkbox indicates a completed feature):
 - Visualizing Word2Vec models
-    - 2D plot with emphasis on words of interest
-    - 2d plot with neighbors of words
+    - [x] 2D plot with emphasis on words of interest
+    - [x] 2d plot with neighbors of words
     - _More coming soon_
 - Text processing utility
-    - Remove stopwords (Indonesian)
-    - Remove region entity (Indonesian)
-    - Remove calendar words (Indonesian)
-    - Remove vulgarity (Indonesian)
+    - [x] Remove stopwords (Indonesian)
+    - [x] Remove region entity (Indonesian)
+    - [x] Remove calendar words (Indonesian)
+    - [x] Remove vulgarity (Indonesian)
 - Corpus-building utility
-    - Build Indonesian corpus using wikipedia
-    - Pre-trained model for quick experimentation
+    - [ ] Build Indonesian corpus using wikipedia
+    - [ ] Pre-trained models for quick experimentation
 
 
 <img align="left" width="35%" src="https://github.com/onlyphantom/elangdev/blob/master/assets/elang_light.png?raw=true" style="margin-right:10%">
@@ -26,12 +26,12 @@ The package provides a collection of utility functions and tools that interface 
 # Quick Demo
 
 ### 2-d Word Embedding Visualization
-Install `elang`:
+Install the latest version of `elang`:
 ```bash
-pip install elang
+pip install --upgrade elang
 ```
 
-Performing word embeddings in **4 lines of code** gets you a visualization:
+Performing word embeddings in **2 lines of code** gets you a visualization:
 ```py
 from elang.plot.utils import plot2d
 from gensim.models import Word2Vec
@@ -41,7 +41,7 @@ plot2d(model)
 ```
 Output:
 
-<img width="50%" src="assets/embedding.png">
+<img width="50%" src="https://github.com/onlyphantom/elangdev/raw/master/assets/embedding.png">
 
 It even looks like a soaring eagle with its outstretched wings!
 
@@ -59,10 +59,12 @@ plotNeighbours(model,
     draggable=True)
 ```
 
-<img width="50%" src="assets/neighbors.png">
+<img width="50%" src="https://github.com/onlyphantom/elangdev/raw/master/assets/neighbors.png">
+
+The plot above plots the 15 nearest neighbors for each word in the supplied `words` argument. It then renders the plot with a draggable legend.
 
 ## Scikit-Learn Compatability
-Because the dimensionality reduction procedure is handled by the underlying `sklearn` code, you can use any of the valid [parameters](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html) in the function call and they will be handed off to the underlying method. Common examples are the `perplexity`, `n_iter` and `random_state` parameters:
+Because the dimensionality reduction procedure is handled by the underlying `sklearn` code, you can use any of the valid [parameters](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html) in the function call to `plot2d` and `plotNeighbours` and they will be handed off to the underlying method. Common examples are the `perplexity`, `n_iter` and `random_state` parameters:
 
 ```py
 model = Word2Vec.load("path.to.model")
