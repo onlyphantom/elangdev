@@ -4,6 +4,7 @@ import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from gensim.models import Word2Vec
+from gensim.utils import simple_preprocess
 
 realpath = os.path.dirname(os.path.realpath(__file__))
 folderpath = realpath + "/corpus"
@@ -41,8 +42,10 @@ def build_from_wikipedia_random(n=10, lang='id', save=False, model=True, *args, 
     if model:
         content_list = [d['content'] for d in articles if 'content' in d.keys()]
         print(content_list)
-        print(len(content_list))
-        corpus = ' '.join(content_list)
+        print(len(content_list), "\n", "-----")
+        # corpus = ' '.join(content_list)
+        corpus = list(map(simple_preprocess, content_list))
+        print(corpus)
         w2vmodel = _create_word2vec(corpus, lang=lang)
         return w2vmodel
 
@@ -115,4 +118,4 @@ def _create_word2vec(corpus, lang, size=100, window=5, iteration=10):
 ##### ##### ##### #####
 
 if __name__ == '__main__':
-    model = build_from_wikipedia_random(3, lang='id', save=False)
+    model = build_from_wikipedia_random(3, lang='id', save=True)
