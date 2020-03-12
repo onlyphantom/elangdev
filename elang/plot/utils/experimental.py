@@ -103,8 +103,8 @@ if __name__ == "__main__":
         + "/word2vec/model/fin.model"
         #  + "/word2vec/model/demo2d.model"
     )
-    # model = Word2Vec.load(MODEL_PATH)
-    model = Word2Vec.load("/Users/samuel/Downloads/scrape5w500d/scrape5w500d.model")   
+    # model = Word2Vec.load("/Users/samuel/Downloads/scrape5w500d/scrape5w500d.model") 
+    model = Word2Vec.load("/Users/samuel/Datasets/corpus/elang500d.model") 
     print("Loaded from Path:", MODEL_PATH, "\n", model)
     
     words = ['bca', 'hitam', 'hutan', 'pisang', 'mobil', "pulau", "pejabat", "android", "kompas"]
