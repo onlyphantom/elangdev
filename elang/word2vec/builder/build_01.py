@@ -55,37 +55,54 @@ def build_from_wikipedia_random(
         print("Article contents successfully saved to", filename)
 
     if model:
-        content_list = [d["content"] for d in articles if "content" in d.keys()]
-        print(content_list)
-        print(len(content_list), "\n", "-----")
-        # corpus = ' '.join(content_list)
-        corpus = list(map(simple_preprocess, content_list))
-        print(corpus)
-        w2vmodel = _create_word2vec(corpus, lang=lang, *args, **kwargs)
+        w2vmodel = _model_from_articles(articles, lang=lang, *args, **kwargs)
         return w2vmodel
 
 
 def build_from_wikipedia_query(
-    query, levels=5, lang="id", save=True, model=True, *args, **kwargs
+    query, levels=2, lang="id", save=True, model=True, *args, **kwargs
 ):
     articles = []
     url_base = f"https://{lang}.wikipedia.org/wiki/"
     try:
         article = _get_wikipedia_article(query, url_base)
-        articles.append(article)
-        related_queries = list(set(article["related_queries"]))
-        all_queries = [query]
+        # articles.append(article)
+        related_queries = set(article["related_queries"])
         print("Related Queries", related_queries)
-        print("All Queries", all_queries)
     except:
         raise Exception("no article found, try another query")
+
+    all_queries = list(related_queries) + [query]
+    queried = []
+
+    print("All Queries", all_queries)
+    for i in range(levels):
+        new_queries = []
+        for que in set(all_queries):
+            if que not in queried and que != "":
+                article = _get_wikipedia_article(que, url_base)
+                articles.append(article)
+                queried.append(que)
+                new_queries.extend(article["related_queries"])
+        all_queries = list(set(new_queries))
+        print(f"Level {i+1} Queried so far: {queried} \n")
+
+    if save:
+        _make_corpus_directory()
+        filename = f"wikipedia_branch_{query}_{levels}.txt"
+        _save_content2txt(articles, filename)
+        print("Article contents successfully saved to", filename)
+
+    if model:
+        w2vmodel = _model_from_articles(articles, lang=lang, *args, **kwargs)
+        return w2vmodel
 
 
 def build_from_wikipedia(query=None, n=10, lang="id", *args, **kwargs):
     if query is None:
-        build_from_wikipedia_random(lang=lang, n=n, *args, **kwargs)
+        return build_from_wikipedia_random(lang=lang, n=n, *args, **kwargs)
     else:
-        build_from_wikipedia_query(query=query, lang=lang, *args, **kwargs)
+        return build_from_wikipedia_query(query=query, lang=lang, *args, **kwargs)
 
 
 ##### ##### ##### #####
@@ -146,6 +163,14 @@ def _create_word2vec(corpus, lang, size=100, window=5, iteration=10, min_count=1
     return model
 
 
+def _model_from_articles(articles, lang, *args, **kwargs):
+    content_list = [d["content"] for d in articles if "content" in d.keys()]
+    # corpus = ' '.join(content_list)
+    corpus = list(map(simple_preprocess, content_list))
+    w2vmodel = _create_word2vec(corpus, lang=lang, *args, **kwargs)
+    return w2vmodel
+
+
 ##### ##### ##### #####
 # RUN DIRECTLY
 ##### ##### ##### #####
@@ -154,6 +179,16 @@ if __name__ == "__main__":
     # model = build_from_wikipedia_random(n=3, lang="id", save=True, size=20, min_count=3)
     # model = build_from_wikipedia(n=3, lang="id", save=True, size=20, min_count=3)
     model = build_from_wikipedia(
-        query="Koronavirus", lang="id", save=True, size=20, min_count=3
+        query="Koronavirus", lang="id", levels=2, save=True, size=20, min_count=3
     )
 
+    #    model = build_from_wikipedia(
+    #     query="Coronavirus_disease_2019",
+    #     lang="en",
+    #     levels=2,
+    #     save=True,
+    #     size=20,
+    #     min_count=3,
+    # )
+
+    print(model)
