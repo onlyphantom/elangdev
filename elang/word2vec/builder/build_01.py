@@ -45,8 +45,8 @@ def build_from_wikipedia_random(
 
     for page in tqdm(range(n)):
         url = requests.request("GET", random_url).url
-        query = re.sub(url_base, "", url)
-        articles.append(_get_wikipedia_article(query, url_base))
+        slug = re.sub(url_base, "", url)
+        articles.append(_get_wikipedia_article(slug, url_base))
 
     if save:
         _make_corpus_directory()
@@ -59,24 +59,24 @@ def build_from_wikipedia_random(
         return w2vmodel
 
 
-def build_from_wikipedia_query(
-    query, levels=2, lang="id", save=True, model=True, *args, **kwargs
+def build_from_wikipedia_branch(
+    slug, levels=2, lang="id", save=True, model=True, *args, **kwargs
 ):
     articles = []
     url_base = f"https://{lang}.wikipedia.org/wiki/"
     try:
-        article = _get_wikipedia_article(query, url_base)
+        article = _get_wikipedia_article(slug, url_base)
         # articles.append(article)
         related_queries = set(article["related_queries"])
         print("Related Queries", related_queries)
     except:
-        raise Exception("no article found, try another query")
+        raise Exception("no article found, try another slug")
 
-    all_queries = list(related_queries) + [query]
+    all_queries = list(related_queries) + [slug]
     queried = []
 
     print("All Queries", all_queries)
-    for i in range(levels):
+    for i in range(int(levels)):
         new_queries = []
         for que in set(all_queries):
             if que not in queried and que != "":
@@ -89,7 +89,7 @@ def build_from_wikipedia_query(
 
     if save:
         _make_corpus_directory()
-        filename = f"wikipedia_branch_{query}_{levels}.txt"
+        filename = f"wikipedia_branch_{slug}_{levels}.txt"
         _save_content2txt(articles, filename)
         print("Article contents successfully saved to", filename)
 
@@ -98,11 +98,46 @@ def build_from_wikipedia_query(
         return w2vmodel
 
 
-def build_from_wikipedia(query=None, n=10, lang="id", *args, **kwargs):
-    if query is None:
-        return build_from_wikipedia_random(lang=lang, n=n, *args, **kwargs)
+def build_from_wikipedia(
+    slug=None, n=10, lang="id", levels=2, save=False, model=True, *args, **kwargs
+):
+    """build_from_wikipedia Build a Word2Vec model by constructing the corpus from Wikipedia articles, either randomly or by branching off from a specified topic ("slug").
+    
+    A simple wrapper that delegates to the corresponding, lower-level functions such as `build_from_wikipedia_random` and `build_from_wikipedia_branch` based on the parameters it was called with. 
+    These functions, in turn, construct a corpus from Wikipedia, and train a Word2Vec model using said corpus.
+
+    When `save` is True (default False), the corpus is saved in the `/corpus` directory. 
+    When `model` is True (default True), a Word2Vec model is trained on the corpus and returned.
+
+    :param slug: A string that is appended to the final segment of the Wikipedia url path ("slug"), defaults to None
+    :type slug: string or None, optional
+    :param n: The number of random articles to parse, defaults to 10
+    :type n: int, optional
+    :param lang: The language version of Wikipedia to parse from (`en` for English, `id` for Indonesian), defaults to "id"
+    :type lang: str, optional
+    :param levels: Determines the level of branching (level 1 refer to all directly related Wikipedia article to the slug, level 2 finds related articles to those related articles in level 1 etc), defaults to 2
+    :type levels: int, optional
+    :param save: Save the built corpus in the `/corpus` directory, defaults to False
+    :type save: bool, optional
+    :param model: Train and return a Word2Vec model on the built corpus, defaults to True
+    :type model: bool, optional
+    :return: A Word2Vec model trained on the built corpus when `model` is True
+    :rtype: Word2Vec model
+    """
+    if slug is None:
+        return build_from_wikipedia_random(
+            lang=lang, n=n, save=save, model=model, *args, **kwargs
+        )
     else:
-        return build_from_wikipedia_query(query=query, lang=lang, *args, **kwargs)
+        return build_from_wikipedia_branch(
+            slug=slug,
+            lang=lang,
+            levels=levels,
+            save=save,
+            model=model,
+            *args,
+            **kwargs,
+        )
 
 
 ##### ##### ##### #####
@@ -114,8 +149,8 @@ def _make_corpus_directory():
         os.makedirs(path)
 
 
-def _get_wikipedia_article(query, url_base):
-    url_query = url_base + str(query)
+def _get_wikipedia_article(slug, url_base):
+    url_query = url_base + str(slug)
     req = requests.get(url_query)
     soup = BeautifulSoup(req.content, "html.parser")
 
@@ -179,11 +214,12 @@ if __name__ == "__main__":
     # model = build_from_wikipedia_random(n=3, lang="id", save=True, size=20, min_count=3)
     # model = build_from_wikipedia(n=3, lang="id", save=True, size=20, min_count=3)
     model = build_from_wikipedia(
-        query="Koronavirus", lang="id", levels=2, save=True, size=20, min_count=3
+        slug="Koronavirus", lang="id", levels=2, save=False, size=20, min_count=3
     )
+    # model = build_from_wikipedia()
 
     #    model = build_from_wikipedia(
-    #     query="Coronavirus_disease_2019",
+    #     slug="Coronavirus_disease_2019",
     #     lang="en",
     #     levels=2,
     #     save=True,
